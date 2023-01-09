@@ -1,11 +1,13 @@
 from process import Process
+from process_manager import ProcessManager
+from process_operation import ProcessOperation
 
 def main():
     # Quantum em milissegundos
     quantum = 1
 
     # Inicializa gerenciadores
-    #process_manager = ProcessManager()
+    process_manager = ProcessManager()
     #memory_manager = MemoryManager.new
     #io_manager = IOManager.new
     #filesystem_manager = FileManager.new
@@ -17,9 +19,10 @@ def main():
     for line in Lines:
         # Passa as informações do processo ao construtor
         new_process = Process(line)
-        # Informar ao gerenciador de processos
-        #process_manager...
-    # Fecha o arquivo para evitar memory leak
+        # Informar ao gerenciador de processos para adicioná-lo na fila global
+        process_manager.add_new_process(new_process)
+
+    # Fecha o arquivo
     processes_file.close()
 
     # Abre o arquivo que representa o estado do disco
@@ -36,14 +39,16 @@ def main():
     for line in Lines:
         if count < occupied_blocks:  # Caso for linha que representa um arquivo em disco
             # Criar objeto File
-            # Passar objeto para o file_manager
+            # Passar objeto para o file_manager.files
+            # ...
+            count += 1
             continue
         else:  # Linha representa operação
-            # Chama o método que adiciona a instrução ao processo adequado
-            # o método será da classe ProcessManager que contém os objetos dos processos salvos
+            # Usa a classe ProcessOperation para salvar a instrução
+            operation = ProcessOperation(line)
+            # A classe FileManager vai ter uma fila de objetos ProcessOperation (FileManager.operations)
             continue
-
-    return 0
+    disk_file.close()  # Fecha o arquivo
 
 
 if __name__ == "__main__":
