@@ -1,6 +1,6 @@
 #armazena informacoes de cada processo
 
-class Proccess:
+class Process:
 
     def __init__(self, input):
 
@@ -24,6 +24,6 @@ class Proccess:
     def add_instruction(self, instruction):
         
         # tratar a entrada
-        # . . . 
+        instruction = instruction.split(',')
         # adiciona instrucoes (organizadas em lista)
         self.instructions.append(instruction)
