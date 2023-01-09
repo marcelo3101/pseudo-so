@@ -21,9 +21,3 @@ class Process:
         self.PID = None                             # definido pelo process manager
         self.instructions = []                      # instruções do processo
 
-    def add_instruction(self, instruction):
-        
-        # tratar a entrada
-        instruction = instruction.split(',')
-        # adiciona instrucoes (organizadas em lista)
-        self.instructions.append(instruction)
