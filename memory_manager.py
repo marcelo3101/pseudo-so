@@ -13,7 +13,7 @@ class MemoryManager:
                 0 a 63 - Tempo real
                 64 a 1023 - Processos de usuário
         """
-        self.memory = [0 * (REAL_TIME + USER)]
+        self.memory = [0] * (REAL_TIME + USER)
 
     def allocate(self, process: Process) -> None:
         """
@@ -28,27 +28,31 @@ class MemoryManager:
         first_free = -1  # Utilizado para salvar o índice do primeiro bloco livre encontrado
         current = start  # Utilizado para manter o acompanhamento de qual índice estamos
         available_blocks = 0  # Saber quantos blocos contíguos estão livres
+        print("START: " + str(start))
+        print("END: " + str(end))
         while current <= end:
-            if (end - current) + 1 < process.memory_blocks:
-                print("O processo não pode ser alocado, não temos blocos contíguos suficientes")
+            if self.memory[current] == 0:  # Achou um bloco livre
+                available_blocks += 1  # Incrementa contador de blocos livres 
+                if first_free == -1: 
+                    first_free = current  # Caso seja o primeiro bloco livre da sequência, salvar esse índice
+                    if ((end - current) + 1) < process.memory_blocks:  # Verificar se existe a possibilidade de termos blocos suficientes
+                        break
+            
+            else: # self.memory[current] == 1, encontramos bloco ocupado
+                first_free = -1
+                available_blocks = 0
+            if available_blocks == process.memory_blocks:  # Encontramos blocos contíguos suficientes
+                process.first_block = first_free  # Indica bloco inicial em que foi alocado
+                # Atualiza a memória
+                for i in range(process.memory_blocks):
+                    self.memory[i + first_free] = 1
                 break
-            else:
-                if self.memory[current] == 0:  # Achou um bloco livre
-                    available_blocks += 1  # Incrementa contador de blocos livres 
-                    if first_free == -1: first_free = current  # Caso seja o primeiro bloco livre da sequência, salvar esse índice
-                
-                else: # self.memory[current] == 1, encontramos bloco ocupado
-                    first_free = -1
-                    available_blocks = 0
-
-                if available_blocks == process.memory_blocks:  # Encontramos blocos contíguos suficientes
-                    process.first_block = first_free  # Indica bloco inicial em que foi alocado
-                    # Atualiza a memória
-                    for i in range(process.memory_blocks):
-                        self.memory[i + first_free] = 1
-                    break
             
             current += 1
+        
+        if process.first_block is None:
+            print("Processo não foi alocado por falta de blocos contíguos")
+
     
     def free(self, process: Process) -> None:
         """
