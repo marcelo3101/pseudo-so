@@ -61,6 +61,9 @@ class MemoryManager:
         """
             Libera o espaço ocupado por um processo
         """
+        if process.first_block is None:
+            print("Processo não está na memória")
+            return
         for i in range(process.memory_blocks):
             self.memory[i + process.first_block] = 0
         process.first_block = None
