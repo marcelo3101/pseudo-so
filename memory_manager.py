@@ -19,6 +19,9 @@ class MemoryManager:
         """
             Aloca um processo na memória
         """
+        if process.first_block is not None:
+            print("Processo já está alocado")
+            return
         start = 0  # Índice em que o loop vai ser iniciado
         end = 63  # Índice em que o loop vai ser encerrado
         # Alterar os índices de referência dependendo do tipo de processo
