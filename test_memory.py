@@ -12,12 +12,18 @@ Apenas um arquivo para testar as funções da classe MemoryManager
 
 memory_manager = MemoryManager()
 
-process1 = Process("2, 0, 3, 62, 0, 0, 0, 0")
+process1 = Process("2, 1, 3, 128, 0, 0, 0, 0")
 
-process2 = Process("2, 0, 3, 3, 0, 0, 0, 0")
+process2 = Process("2, 1, 3, 64, 0, 0, 0, 0")
+
+process3 = Process("2, 0, 3, 64, 0, 0, 0, 0")
+
 
 memory_manager.allocate(process1)
 memory_manager.allocate(process2)
+memory_manager.free(process1)
+memory_manager.free(process1)
+memory_manager.allocate(process3)
 print(memory_manager.memory[0:64])
 print(memory_manager.memory[64:])
 
