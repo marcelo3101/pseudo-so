@@ -1,6 +1,8 @@
 from process import Process
 from process_manager import ProcessManager
 from process_operation import ProcessOperation
+from file import File
+from file_manager import FileManager
 
 # Tratar caso em que depois das execucoes, cou fica livre (tipo None)
 
@@ -26,7 +28,6 @@ def main():
     process_manager = ProcessManager()
     #memory_manager = MemoryManager.new
     #io_manager = IOManager.new
-    #filesystem_manager = FileManager.new
 
     # Abre o arquivo dos processos
     processes_file = open('processes.txt', 'r')
@@ -55,14 +56,16 @@ def main():
     # Linha que representa a quantidade de blocos ocupados
     occupied_blocks = int(Lines[0])
     Lines.pop(0)  # Remove a linha
-    
+    # Inicializa o sistema de arquivos
+    file_manager = FileManager(disk_blocks)
     # Lê as linhas
     count = 0
     for line in Lines:
         if count < occupied_blocks:  # Caso for linha que representa um arquivo em disco
             # Criar objeto File
+            file_object = File(line)
             # Passar objeto para o file_manager.files
-            # ...
+            file_manager.add_file(file_object)
             count += 1
             continue
         else:  # Linha representa operação
@@ -71,7 +74,6 @@ def main():
             # A classe FileManager vai ter uma fila de objetos ProcessOperation (FileManager.operations)
             continue
     disk_file.close()  # Fecha o arquivo
-
     for process in process_manager.global_queue:
         dispatcher(process, process_manager, operation)
     
