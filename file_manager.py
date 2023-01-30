@@ -8,7 +8,7 @@ class FileManager:
     def __init__(self):
         self.blocks_quantity = 0
         self.segments_quantity = 0
-        self.files = []
+        self.files = {}
         self.operations = []
         self.disc = []
         self.log = []
