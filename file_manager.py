@@ -25,10 +25,10 @@ class FileManager:
         offset = None
         available = 0
 
-        if(name in [file.name for file in self.files]):
+        if name in self.files:
             self.log.append({
                 "status": "Falha",
-                "mensagem": f"O processo P{str(creator)} nao criou o arquivo (Arquivo ja existe no disco)"
+                "mensagem": f"O processo P{str(creator)} nao criou o arquivo (Arquivo já existe no disco)"
             })
         else:
             for i in range(self.blocks_quantity):
@@ -41,12 +41,16 @@ class FileManager:
                         offset = i - available + 1
 
                         for j in range(size):
-                            self.disc[offset + available + j] = name
+                            self.disc[offset + available + j] = 1
                             offset += 1
 
-                        file = File([name, offset, size], creator)
+                        fileObj = File(name + ", " + offset + ", " + size, creator)
 
-                        self.files.append(file)
+                        self.files[fileObj.name] = {
+                            "first_block": fileObj.first_block,
+                            "memory_blocks": fileObj.memory_blocks,
+                            "process_id": fileObj.process_id
+                        }
                         self.log.append({
                             "status": "Sucesso",
                             "mensagem": f"O processo P{str(creator)} criou o arquivo"
@@ -84,14 +88,21 @@ class FileManager:
             })
         
 
-    def operate_process(self, process):
-        ops = [op for op in self.operations if op.processId == process.pid]
-        print(f"ops {ops}")
-
-        for op in ops:
+    def operate_process(self, process: Process):
+        # Pegar a próxima operação
+        op = None
+        for operation in self.operations:
+            if operation.pid == process.PID:
+                op = operation
+                self.operations.remove(operation)
+                break
+        
+        if(op):
             if (op.opcode == 0):
-                self.create_file(op.file, op.size, process.pid)
+                self.create_file(op.filename, op.file_size, process.PID)
             else:
                 self.delete_file(op.filename)
                     
-            self.operations.remove(op)
+            self.operations.remove(op) # Remove da lista
+        else:
+            print("Não tem operação pendente")  # Print para indicar que acabou, mudar dps na integração
