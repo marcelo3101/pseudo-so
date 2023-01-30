@@ -29,67 +29,87 @@ def main():
     process_manager = ProcessManager()
     #memory_manager = MemoryManager.new
     #io_manager = IOManager.new
-<<<<<<< HEAD
-=======
-    #filesystem_manager = FileManager.new
+    file_system_manager = FileManager()
 
->>>>>>> parent of 61d00fc (Função add_file)
     # Abre o arquivo dos processos
-    with open('processes.txt', 'r') as file:
-        processes_lines = [line.rstrip() for line in file]
+    processes_file = open('processes.txt', 'r')
+    Lines = processes_file.readlines()
     
     # Lê as linhas e cria os objetos dos processos
-    for line in processes_lines:
+    for line in Lines:
+    
         # Passa as informações do processo ao construtor
         new_process = Process(line)
+                
         # Informar ao gerenciador de processos para adicioná-lo na fila global
         process_manager.add_new_process(new_process)
 
+    # Fecha o arquivo
+    processes_file.close()
+
     # Abre o arquivo que representa o estado do disco
-    with open('files.txt', 'r') as file:
-        files_lines = [line.rstrip() for line in file]
+    disk_file = open('files.txt', 'r')
+    Lines = disk_file.readlines()
     
     # Primeira linha indica quantidade de blocos no disco
-    disk_blocks = int(files_lines.pop(0))
+    file_system_manager.blocks_quantity = int(Lines[0])
+    Lines.pop(0)  # Remove a linha
+    
     # Linha que representa a quantidade de blocos ocupados
     occupied_blocks = int(Lines[0])
     Lines.pop(0)  # Remove a linha
-<<<<<<< HEAD
-    # Inicializa o sistema de arquivos
-    file_manager = FileManager(disk_blocks)
-
-=======
     
->>>>>>> parent of 61d00fc (Função add_file)
     # Lê as linhas
     count = 0
-    for line in files_lines: # Carrega os arquivos dentro do disco
+    for line in Lines:
         if count < occupied_blocks:  # Caso for linha que representa um arquivo em disco
             # Criar objeto File
+            fileObj = File(line)
             # Passar objeto para o file_manager.files
-            # ...
+            file_system_manager.files[fileObj.name] = {
+                "first_block": fileObj.first_block,
+                "memory_blocks": fileObj.memory_blocks,
+                "process_id": fileObj.process_id
+            }
             count += 1
         else:  # Linha representa operação
             # Usa a classe ProcessOperation para salvar a instrução
             operation = ProcessOperation(line)
             # A classe FileManager vai ter uma fila de objetos ProcessOperation (FileManager.operations)
-            continue
+            file_system_manager.operations.append(operation)
     disk_file.close()  # Fecha o arquivo
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> parent of 61d00fc (Função add_file)
+    print("ARQUIVOS SALVOS")
+    print(file_system_manager.files)
+    # Inicializa o file system com os arquivos criados
+    file_system_manager.initialize_disc()
+
+    print("ESTADO ATUAL DO DISCO")
+    print(file_system_manager.disc)
+
+
+
     for process in process_manager.global_queue:
         dispatcher(process, process_manager, operation)
+        
+        # Apenas para teste! Mudar depois na integração dos módulos
+        ref = 0
+        while(ref <= 5):
+            file_system_manager.operate_process(process)
+            ref += 1
     
+    print("ESTADO ATUAL DO DISCO")
+    print(file_system_manager.disc)
+    print("LOG DO FILESYSTEM")
+    for log in file_system_manager.log:
+        print(log)
 
 
 def printa_fila(fila: ProcessManager):
     a = []
     for i in fila:
         a.append(i.PID)
-    return a
+    return 
 
 
 if __name__ == "__main__":
