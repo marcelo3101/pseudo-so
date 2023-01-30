@@ -41,10 +41,8 @@ class FileManager:
                         offset = i - available + 1
 
                         for j in range(size):
-                            self.disc[offset + available + j] = 1
-                            offset += 1
-
-                        fileObj = File(name + ", " + offset + ", " + size, creator)
+                            self.disc[offset + j] = 1
+                        fileObj = File(name + ", " + str(offset) + ", " + str(size), creator)
 
                         self.files[fileObj.name] = {
                             "first_block": fileObj.first_block,
@@ -53,15 +51,15 @@ class FileManager:
                         }
                         self.log.append({
                             "status": "Sucesso",
-                            "mensagem": f"O processo P{str(creator)} criou o arquivo"
+                            "mensagem": f"O processo P{str(creator)} criou o arquivo {fileObj.name}"
                         })
                 else:
                     available = 0
 
-            if available == 0:
+            if offset is None:
                 self.log.append({
                     "status": "Falha",
-                    "mensagem": f"O processo P{str(creator)} nao criou o arquivo (sem espaco livre)"
+                    "mensagem": f"O processo P{str(creator)} nao criou o arquivo {name} (sem espaco livre)"
                 })
 
     
@@ -69,14 +67,14 @@ class FileManager:
         if filename not in self.files:
             self.log.append({
                 "status": "Falha",
-                "mensagem": f"O processo {str(process.pid)} nao pode deletar o arquivo {filename}, pois ele não existe"
+                "mensagem": f"O processo {str(process.PID)} nao pode deletar o arquivo {filename}, pois ele não existe"
             })
             return
         file= self.files[filename]  # Pega as informações do arquivo
         if process.priority != 0 and file["process_id"] != process.PID:
             self.log.append({
                 "status": "Falha",
-                "mensagem": f"O processo {str(process.pid)} nao pode deletar o arquivo {filename}, pois o arquivo não foi criado por ele"
+                "mensagem": f"O processo {str(process.PID)} nao pode deletar o arquivo {filename}, pois o arquivo não foi criado por ele"
             })
         else:
             # Atualiza o mapa do disco
@@ -84,7 +82,7 @@ class FileManager:
                 self.disc[file["first_block"] + i] = 0
             self.log.append({
                 "status": "Sucesso",
-                "mensagem": f"O processo {str(process.pid)} deletou o arquivo {filename}"
+                "mensagem": f"O processo {str(process.PID)} deletou o arquivo {filename}"
             })
         
 
@@ -101,8 +99,7 @@ class FileManager:
             if (op.opcode == 0):
                 self.create_file(op.filename, op.file_size, process.PID)
             else:
-                self.delete_file(op.filename)
+                self.delete_file(op.filename, process)
                     
-            self.operations.remove(op) # Remove da lista
         else:
             print("Não tem operação pendente")  # Print para indicar que acabou, mudar dps na integração
