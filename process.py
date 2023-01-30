@@ -8,8 +8,6 @@ class Process:
         input = input.replace(",", "")
         input = input.split(" ")
         input = [int(i) for i in input]
-        print(input)
-
         #obs: verificar se precisa especificar espaço também
 
         # atribuir valores:

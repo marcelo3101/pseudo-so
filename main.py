@@ -1,6 +1,8 @@
 from process import Process
 from process_manager import ProcessManager
 from process_operation import ProcessOperation
+from file import File
+from file_manager import FileManager
 
 from file import File
 from file_manager import FileManager
@@ -29,8 +31,6 @@ def main():
     process_manager = ProcessManager()
     #memory_manager = MemoryManager.new
     #io_manager = IOManager.new
-    filesystem_manager = FileManager()
-
     # Abre o arquivo dos processos
     with open('processes.txt', 'r') as file:
         processes_lines = [line.rstrip() for line in file]
@@ -49,25 +49,27 @@ def main():
     # Primeira linha indica quantidade de blocos no disco
     disk_blocks = int(files_lines.pop(0))
     # Linha que representa a quantidade de blocos ocupados
-    occupied_blocks = int(files_lines.pop(0)) 
+    occupied_blocks = int(Lines[0])
+    Lines.pop(0)  # Remove a linha
+    # Inicializa o sistema de arquivos
+    file_manager = FileManager(disk_blocks)
 
-    filesystem_manager.blocks_quantity = disk_blocks
-    filesystem_manager.segments_quantity = occupied_blocks
-
-    print(f"files_lines {files_lines}")
-    
     # Lê as linhas
     count = 0
     for line in files_lines: # Carrega os arquivos dentro do disco
         if count < occupied_blocks:  # Caso for linha que representa um arquivo em disco
-            new_file = File(file=line) # Criar objeto File
-            filesystem_manager.files.append(new_file) # guarda o File dentro da classe FileManager
+            # Criar objeto File
+            file_object = File(line)
+            # Passar objeto para o file_manager.files
+            file_manager.add_file(file_object)
             count += 1
         else:  # Linha representa operação
             # Usa a classe ProcessOperation para salvar a instrução
             operation = ProcessOperation(line)
             # A classe FileManager vai ter uma fila de objetos ProcessOperation (FileManager.operations)
-
+            continue
+    disk_file.close()  # Fecha o arquivo
+    
     for process in process_manager.global_queue:
         dispatcher(process, process_manager, operation)
     
