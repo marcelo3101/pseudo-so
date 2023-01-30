@@ -12,3 +12,4 @@ class File:
         self.first_block = int(input[1])  # Primeiro bloco que ocupa no disco
         self.memory_blocks = int(input[2])  # Quantidade de blocos do disco que ocupa
         self.process_id = process_id  # ID do processo que criou, caso tiver
+
