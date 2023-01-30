@@ -3,25 +3,23 @@
 # deve ter uma lista com as operações qe foram feitas (são dadas na entrada)
 
 from file import File
+from process import Process
 
 class FileManager:
     def __init__(self):
         self.blocks_quantity = 0
-        self.segments_quantity = 0
         self.files = {}
         self.operations = []
         self.disc = []
         self.log = []
     
     def initialize_disc(self):
-        self.disc = []
-
-        for i in range(self.blocks_quantity):
-            self.disc[i] = 0
-
-        for file in self.files:
-            if file.start_block != 0:
-                self.disc[file.start_block + file.size] = file.name # TODO: TEM QUE VE ISSO AQUI DIREITINHO KKKK
+        self.disc = [0] * self.blocks_quantity  # Inicializa o mapa do disco
+        # Aloca os arquivos que foram adicionados via .txt
+        for file_info in self.files.values():
+            for i in range(file_info["memory_blocks"]):
+                self.disc[file_info["first_block"] + i] = 1
+    
     
     def create_file(self, name, size, creator):
         offset = None
@@ -63,10 +61,28 @@ class FileManager:
                 })
 
     
-    def delete_file(self, file):
-        for i in range(file.size):
-            self.disc[file.start_block + i] = 0
-    
+    def delete_file(self, filename, process: Process):
+        if filename not in self.files:
+            self.log.append({
+                "status": "Falha",
+                "mensagem": f"O processo {str(process.pid)} nao pode deletar o arquivo {filename}, pois ele não existe"
+            })
+            return
+        file= self.files[filename]  # Pega as informações do arquivo
+        if process.priority != 0 and file["process_id"] != process.PID:
+            self.log.append({
+                "status": "Falha",
+                "mensagem": f"O processo {str(process.pid)} nao pode deletar o arquivo {filename}, pois o arquivo não foi criado por ele"
+            })
+        else:
+            # Atualiza o mapa do disco
+            for i in range(file["memory_blocks"]):
+                self.disc[file["first_block"] + i] = 0
+            self.log.append({
+                "status": "Sucesso",
+                "mensagem": f"O processo {str(process.pid)} deletou o arquivo {filename}"
+            })
+        
 
     def operate_process(self, process):
         ops = [op for op in self.operations if op.processId == process.pid]
@@ -76,24 +92,6 @@ class FileManager:
             if (op.opcode == 0):
                 self.create_file(op.file, op.size, process.pid)
             else:
-                file = [file for file in self.files if file.name == op.file]
-
-                if (file != None):
-                    if (process.priority == 0 or file.creator == None or process.pid == file.creator):
-                        self.delete_file(file)
-                        self.log.append({
-                            "status": "Sucesso",
-                            "mensagem": f"O processo P{str(process.pid)} deletou o arquivo"
-                        })
-                    else:
-                        self.log.append({
-                            "status": "Falha",
-                            "mensagem": f"O processo {str(process.pid)} nao pode deletar o arquivo"
-                        })
-                else:
-                    self.log.append({
-                        "status": "Falha",
-                        "mensagem": f"O processo P{str(process.pid)} nao pode deletar o arquivo"
-                    })
-
+                self.delete_file(op.filename)
+                    
             self.operations.remove(op)
