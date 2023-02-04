@@ -8,7 +8,6 @@ class Process:
         input = input.replace(",", "")
         input = input.split(" ")
         input = [int(i) for i in input]
-
         #obs: verificar se precisa especificar espaço também
 
         # atribuir valores:
@@ -21,6 +20,7 @@ class Process:
         self.modem_req =        int(input[6])       # requisição do modem
         self.disk_code =        int(input[7])       # número-código do disco (ACHO QUE É PARA SATA)
         self.PID = None                             # definido pelo process manager
+        self.first_block = None
         self.instructions = []                      # instruções do processo
         self.time_in_current_queue = 0              # tempo desde chegada à fila atual (usada no aging process)
         self.time_executed = 0                      # quantas unidades de tempo passou exeutando
