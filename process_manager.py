@@ -1,6 +1,9 @@
 # administra as filas, escalona os process, cria processos, etc.
 from process import Process
 
+# IMPLEMENTAR FUNCIONALIDADE QUE VERIFICA SE PODE INERIR NOVO PROCESSO (NO MÁXIMO 100)
+# IMPLEMENTAR FUNCIONALIDADE QUE VERIFICA SE RECURSOS DE E/S DESEJADOS PELOS PROCESSOS ESTÃO DISPONÍVEIS (SE NÃO ESTIVEREM, ROTACIONA FILA)
+
 class ProcessManager:
     MAX = 1000  # Número máximo de processos
 
@@ -15,7 +18,7 @@ class ProcessManager:
         self.pid_tracker = 0                    # Variável usada para definir a pid
         #self.current_processes_priority = 0     # Prioridade do processo presente em CPU
 
-    # Ordenar na global de acordo com o tempo de chega,a e só depois adicionar nas filas de prioridade
+    # Ordenar na global de acordo com o tempo de chegada e só depois adicionar nas filas de prioridade
     def add_new_process(self, process: Process) -> None:  # Adiciona um novo proceso a fila global
         # if self.pid_tracker > 1000: return ERROR
         process.PID = self.pid_tracker  # Define uma ID para o processo
@@ -100,9 +103,8 @@ class ProcessManager:
         # Devolve processo à fila caso não finalizado
         if(not finished):
             match self.in_cpu.priority:
-                # O caso 0 nunca ocorre porque os processos de tempo real (prioridade 0) só são removidos da memória depois de finalizarem 
-                #case 0:
-                #    self.real_time_queue.append(self.in_cpu)
+                case 0:
+                    return      # Se o processo não terminou e é prioridade 0, ele deve continuar na CPU
                 case 1:
                     self.first_queue.append(self.in_cpu)
                 case 2:
@@ -110,7 +112,7 @@ class ProcessManager:
                 case 3:
                     self.third_queue.append(self.in_cpu)
         
-        # Bota novo processo na cpu
+        # Bota novo processo na cpu (se finalizou, descarta processo (funciona ate pra prioridade 0), se não, descarta também)
         self.in_cpu = queue_priority[0]
         queue_priority.pop(0)
 

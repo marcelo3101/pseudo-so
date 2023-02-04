@@ -19,7 +19,7 @@ class Process:
         self.printer_code_req = int(input[4])       # número-código da impressora requisitada
         self.scanner_req =      int(input[5])       # requisição do scanner
         self.modem_req =        int(input[6])       # requisição do modem
-        self.disk_code =        int(input[7])       # número-código do disco
+        self.disk_code =        int(input[7])       # número-código do disco (ACHO QUE É PARA SATA)
         self.PID = None                             # definido pelo process manager
         self.instructions = []                      # instruções do processo
         self.time_in_current_queue = 0              # tempo desde chegada à fila atual (usada no aging process)

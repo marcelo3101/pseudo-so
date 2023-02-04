@@ -2,6 +2,9 @@ from process import Process
 from process_manager import ProcessManager
 from process_operation import ProcessOperation
 
+
+
+
 # Tratar caso em que depois das execucoes, cou fica livre (tipo None)
 
 def dispatcher(process: Process, process_manager: ProcessManager, process_operation: ProcessOperation):
