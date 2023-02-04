@@ -1,7 +1,6 @@
 from process import Process
 from process_manager import ProcessManager
 from process_operation import ProcessOperation
-
 from file import File
 from file_manager import FileManager
 
