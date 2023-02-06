@@ -113,7 +113,7 @@ def main():
         print(f"Operação {i} => " + log["status"] + "\n" + log["mensagem"] + "\n")
     # Print do mapa de ocupação do disco
     print("Mapa de ocupação do disco")
-
+    file_system_manager.print_map()
 
     #print(process_manager.process_left())
     #print(process_manager.real_time_queue[0].PID)
