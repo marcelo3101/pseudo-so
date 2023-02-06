@@ -1,6 +1,6 @@
 # administra as filas, escalona os process, cria processos, etc.
 from process import Process
-
+from memory_manager import MemoryManager
 # IMPLEMENTAR FUNCIONALIDADE QUE VERIFICA SE PODE INERIR NOVO PROCESSO (NO MÁXIMO 100)
 # IMPLEMENTAR FUNCIONALIDADE QUE VERIFICA SE RECURSOS DE E/S DESEJADOS PELOS PROCESSOS ESTÃO DISPONÍVEIS (SE NÃO ESTIVEREM, ROTACIONA FILA)
 
@@ -26,19 +26,21 @@ class ProcessManager:
         self.global_queue.append(process)  # Adiciona o processo a fila global
         
     # Verifica processos com init_time igual ao tempo atual e os adiciona na fila adequada
-    def add_by_time(self, current_time):
+    def add_by_time(self, current_time, memory_manager: MemoryManager):
         for process in self.global_queue:
             if process.init_time == current_time:
-                match process.priority:            # Adiciona o processo a fila de prioridade adequada
-                    case 0:
-                        self.real_time_queue.append(process)
-                    case 1:
-                        self.first_queue.append(process)
-                    case 2:
-                        self.second_queue.append(process)
-                    case 3:
-                        self.third_queue.append(process)
-                self.global_queue.remove(process)  # Remove processo da fila global
+                # Chama função do gerenciador de memória para alocar
+                if(memory_manager.allocate(process)):
+                    match process.priority:            # Adiciona o processo a fila de prioridade adequada
+                        case 0:
+                            self.real_time_queue.append(process)
+                        case 1:
+                            self.first_queue.append(process)
+                        case 2:
+                            self.second_queue.append(process)
+                        case 3:
+                            self.third_queue.append(process)
+                    self.global_queue.remove(process)  # Remove processo da fila global
             # Como a lista está ordenada, ir até o primeiro processo com init_time > current_time
             if process.init_time > current_time:
                 break
@@ -169,7 +171,7 @@ class ProcessManager:
                     self.load_process(self.third_queue)
 
     # Função que executa preempção de acordo com o estado atual dos processos
-    def process_preemption(self, time) -> None:
+    def process_preemption(self, memory_manager: MemoryManager) -> None:
         
         # Se não há processo na cpu e não há processo para ser escalonado, simplesmente retorna
         #if (not self.in_cpu) and (not len(self.global_queue)):
@@ -181,6 +183,7 @@ class ProcessManager:
 
             # Se processo acabou, remove da CPU
             if self.check_process_finish():
+                memory_manager.free(self.in_cpu)  # Libera espaço ocupado na memória
                 self.in_cpu = None
 
 
