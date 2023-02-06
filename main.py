@@ -3,6 +3,8 @@ from process_manager import ProcessManager
 from process_operation import ProcessOperation
 from file import File
 from file_manager import FileManager
+from memory_manager import MemoryManager
+from resource_manager import ResourceManager
 
 # Tratar caso em que depois das execucoes, cou fica livre (tipo None)
 
@@ -26,8 +28,8 @@ def main():
 
     # Inicializa gerenciadores
     process_manager = ProcessManager()
-    #memory_manager = MemoryManager.new
-    #io_manager = IOManager.new
+    memory_manager = MemoryManager()
+    resource_manager = ResourceManager()
     file_system_manager = FileManager()
 
     # Abre o arquivo dos processos
@@ -78,25 +80,61 @@ def main():
             file_system_manager.operations.append(operation)
     disk_file.close()  # Fecha o arquivo
 
-    print("ARQUIVOS SALVOS")
-    print(file_system_manager.files)
     # Inicializa o file system com os arquivos criados
     file_system_manager.initialize_disc()
 
-    print("ESTADO ATUAL DO DISCO")
-    print(file_system_manager.disc)
-
-
-
-    for process in process_manager.global_queue:
-        dispatcher(process, process_manager, operation)
+    # Sort na global queue pelo init_time dos processos
+    process_manager.global_queue = sorted(process_manager.global_queue, key=lambda x: x.init_time)
+    time = 0  # Marca o tempo atual
+    while(process_manager.process_left() or process_manager.in_cpu):
         
-        # Apenas para teste! Mudar depois na integração dos módulos
-        ref = 0
-        while(ref <= 5):
-            file_system_manager.operate_process(process)
-            ref += 1
-    
+        # Adiciona novos processos que chegaram no tempo atual a suas determinadas filas
+        process_manager.add_by_time(time)
+
+        print("Time = " + str(time) + "\n")
+
+        # Método que faz escalonamento de processos
+        process_manager.process_preemption(time)
+
+
+
+
+        if process_manager.in_cpu:
+            print("PID do processo atual:............." + str(process_manager.in_cpu.PID))
+            print("Prioridade do processo atual:......" + str(process_manager.in_cpu.priority))
+            print("Executed time in CPU:.............." + str(process_manager.in_cpu.time_executed + 1))
+            print("Processing time:..................." + str(process_manager.in_cpu.processing_time) + "\n")
+
+
+        # Aumenta tempo de execução antes de virar o while
+        time += 1
+
+
+
+
+    #print(process_manager.process_left())
+    #print(process_manager.real_time_queue[0].PID)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     print("ESTADO ATUAL DO DISCO")
     print(file_system_manager.disc)
     print("LOG DO FILESYSTEM")

@@ -24,15 +24,33 @@ class ProcessManager:
         process.PID = self.pid_tracker  # Define uma ID para o processo
         self.pid_tracker += 1
         self.global_queue.append(process)  # Adiciona o processo a fila global
-        match process.priority:            # Adiciona o processo a fila de prioridade adequada
-            case 0:
-                self.real_time_queue.append(process)
-            case 1:
-                self.first_queue.append(process)
-            case 2:
-                self.second_queue.append(process)
-            case 3:
-                self.third_queue.append(process)
+        
+    # Verifica processos com init_time igual ao tempo atual e os adiciona na fila adequada
+    def add_by_time(self, current_time):
+        for process in self.global_queue:
+            if process.init_time == current_time:
+                match process.priority:            # Adiciona o processo a fila de prioridade adequada
+                    case 0:
+                        self.real_time_queue.append(process)
+                    case 1:
+                        self.first_queue.append(process)
+                    case 2:
+                        self.second_queue.append(process)
+                    case 3:
+                        self.third_queue.append(process)
+                self.global_queue.remove(process)  # Remove processo da fila global
+            # Como a lista está ordenada, ir até o primeiro processo com init_time > current_time
+            if process.init_time > current_time:
+                break
+    
+    # Checa se exite algum processo restante
+    def process_left(self):
+        if (len(self.global_queue) or
+            len(self.real_time_queue) or
+            len(self.first_queue) or
+            len(self.second_queue) or
+            len(self.third_queue)):
+            return True
 
     # Verifica se processo finalizou (retorna verdadeiro ou falso)
     def check_process_finish(self) -> None:
@@ -60,7 +78,7 @@ class ProcessManager:
                 break
 
         # Se houver processo de prioridade maior, bota novo processo na cpu
-        if(new_list):
+        if(new_list != None):
             return [True, new_list]
         else:
             return [False, new_list]
@@ -130,30 +148,115 @@ class ProcessManager:
                 process.priority -= 1
 
     # Função que garante rotação dos processos dentro das filas obedecendo o quantum
-    def process_queue_rotation(self, quantum) -> None:  # talvez não usemos o quantum aqui
+    def process_queue_rotation(self) -> None:
         # Realimenta CPU com processo da mesma fila do processo que está nela
         # self.load_process(self.in_cpu.priority)
        
-       # Rotaciona fila somente se elas possuirem mais de um processo
+       # Rotaciona fila somente se elas possuirem pelo menos um processo
         match self.in_cpu.priority:
             # Caso 0 só ocorre quando o na CPU acabar (FIFO). Avaliar necessidade de manter case 0
             case 0:
-                if(len(self.real_time_queue) > 1):
+                if(len(self.real_time_queue) >= 1):
                     self.load_process(self.real_time_queue)
             case 1:
-                if(len(self.first_queue) > 1):
+                if(len(self.first_queue) >= 1):
                     self.load_process(self.first_queue)
             case 2:
-                if(len(self.second_queue) > 1):
+                if(len(self.second_queue) >= 1):
                     self.load_process(self.second_queue)
             case 3:
-                if(len(self.third_queue) > 1):
+                if(len(self.third_queue) >= 1):
                     self.load_process(self.third_queue)
 
-    # Função que executa preempção caso cheguem processos de prioridade maior (devolve processo da cpu para sua fila e executa novo processo de prioridade maior)
-    def process_preemption(self, process: Process) -> None:
-        check_high = self.check_higher_priority()
-        if(check_high[0]):                      # Se há processo de maior prioridade
-            self.load_process(check_high[1])    # Carrega processo de maior prioridade
+    # Função que executa preempção de acordo com o estado atual dos processos
+    def process_preemption(self, time) -> None:
+        
+        # Se não há processo na cpu e não há processo para ser escalonado, simplesmente retorna
+        #if (not self.in_cpu) and (not len(self.global_queue)):
+        #    return
 
-        # Tambem fazer rotacao quando prioridade for igual
+        # Aumenta tracker de tempo de execução do processo
+        if self.in_cpu:
+            self.in_cpu.time_executed += 1
+
+            # Se processo acabou, remove da CPU
+            if self.check_process_finish():
+                self.in_cpu = None
+
+
+        # Se não há processo na CPU e há processo para ser escalonado, carrega o de maior prioridade.
+        # Se não houver processo para ser escalonado, simplemente deixa passar
+        if self.in_cpu == None:
+            if len(self.real_time_queue) > 0:
+                self.load_process(self.real_time_queue)
+            elif len(self.first_queue) > 0:
+                self.load_process(self.first_queue)
+            elif len(self.second_queue) > 0:
+                self.load_process(self.second_queue)
+            elif len(self.third_queue) > 0:
+                self.load_process(self.third_queue)
+            return
+
+        # Não realiza preempção se o processo for de tempo real e ele não tiver acabado
+        if self.in_cpu.priority == 0 and (not self.check_process_finish()):
+            return
+        
+        # Checa se há processo de prioridade maior
+        check_high = self.check_higher_priority()
+        if(check_high[0]):
+            match check_high[1]:
+                case 0:
+                    nova_fila_prioridade = self.real_time_queue
+                case 1:
+                    nova_fila_prioridade = self.first_queue
+                case 2:
+                    nova_fila_prioridade = self.second_queue
+                case 3:
+                    nova_fila_prioridade = self.third_queue
+
+            self.load_process(nova_fila_prioridade)    # Carrega processo de maior prioridade
+            return
+
+        # Verifica se a fila atual tem mais membros
+        current_queue = self.in_cpu.priority
+        match current_queue:
+            case 0:
+                tamanho_fila_atual = len(self.real_time_queue)
+            case 1:
+                tamanho_fila_atual = len(self.first_queue)
+            case 2:
+                tamanho_fila_atual = len(self.second_queue)
+            case 3:
+                tamanho_fila_atual = len(self.third_queue)
+
+        #Se tiver mais membros na fila atual, rotaciona
+        if tamanho_fila_atual >= 1:
+            self.process_queue_rotation()   # rotaciona
+            return
+        
+        else:
+            # verifica se o processo atual finalizou
+            if self.check_process_finish():                # se finalizou
+                check_low = self.check_lower_priority()
+
+                if(check_low[0]):
+                    match check_low[1]:
+                        case 0:
+                            nova_fila_prioridade = self.real_time_queue
+                        case 1:
+                            nova_fila_prioridade = self.first_queue
+                        case 2:
+                            nova_fila_prioridade = self.second_queue
+                        case 3:
+                            nova_fila_prioridade = self.third_queue
+
+                    self.load_process(nova_fila_prioridade)    # Carrega nova fila de prioridade
+                    return
+            else:        # Se não finalizou
+                return   # Continua no processo atual
+
+
+
+
+
+
