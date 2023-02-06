@@ -15,13 +15,13 @@ class MemoryManager:
         """
         self.memory = [0] * (REAL_TIME + USER)
 
-    def allocate(self, process: Process) -> None:
+    def allocate(self, process: Process) -> bool:
         """
             Aloca um processo na memória
         """
         if process.first_block is not None:
-            print("Processo já está alocado")
-            return
+            print(f"O processo {str(process.PID)} já está alocado")
+            return False
         start = 0  # Índice em que o loop vai ser iniciado
         end = 63  # Índice em que o loop vai ser encerrado
         # Alterar os índices de referência dependendo do tipo de processo
@@ -49,13 +49,13 @@ class MemoryManager:
                 # Atualiza a memória
                 for i in range(process.memory_blocks):
                     self.memory[i + first_free] = 1
-                break
+                return True
             
             current += 1
         
         if process.first_block is None:
-            print("Processo não foi alocado por falta de blocos contíguos")
-
+            print(f"O processo {str(process.PID)} não foi alocado por falta de espaço")
+            return False
     
     def free(self, process: Process) -> None:
         """
