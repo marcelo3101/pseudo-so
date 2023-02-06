@@ -97,48 +97,26 @@ def main():
         process_manager.process_preemption(memory_manager)
 
 
-
         if process_manager.in_cpu:
             print("PID do processo atual:............." + str(process_manager.in_cpu.PID))
             print("Prioridade do processo atual:......" + str(process_manager.in_cpu.priority))
             print("Executed time in CPU:.............." + str(process_manager.in_cpu.time_executed + 1))
             print("Processing time:..................." + str(process_manager.in_cpu.processing_time) + "\n")
+            file_system_manager.operate_process(process_manager.in_cpu)  # Realiza uma operação do processo
 
 
         # Aumenta tempo de execução antes de virar o while
         time += 1
-
-
+    # Print do log do file system manager
+    print("Sistema de arquivos =>")
+    for i, log in enumerate(file_system_manager.log):
+        print(f"Operação {i} => " + log["status"] + "\n" + log["mensagem"] + "\n")
+    # Print do mapa de ocupação do disco
+    print("Mapa de ocupação do disco")
 
 
     #print(process_manager.process_left())
     #print(process_manager.real_time_queue[0].PID)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    print("ESTADO ATUAL DO DISCO")
-    print(file_system_manager.disc)
-    print("LOG DO FILESYSTEM")
-    for log in file_system_manager.log:
-        print(log)
 
 
 def printa_fila(fila: ProcessManager):
