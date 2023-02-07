@@ -95,12 +95,12 @@ def main():
         
         
         # Adiciona novos processos que chegaram no tempo atual a suas determinadas filas
-        process_manager.add_by_time(time)
+        process_manager.add_by_time(time, memory_manager)
 
         print("Time = " + str(time))
 
         # Método que faz escalonamento de processos
-        process_manager.process_preemption(time)
+        process_manager.process_preemption(memory_manager)
         process_manager.age_process()
 
         if process_manager.in_cpu:
@@ -108,6 +108,7 @@ def main():
             print("Prioridade do processo atual:......" + str(process_manager.in_cpu.priority))
             print("Executed time in CPU:.............." + str(process_manager.in_cpu.time_executed + 1))
             print("Processing time:..................." + str(process_manager.in_cpu.processing_time) + "\n")
+            file_system_manager.operate_process(process_manager.in_cpu)  # Realiza uma operação do processo
 
         # Método que aloca dispositivos de E/S
 
@@ -134,38 +135,16 @@ def main():
 
         # Aumenta tempo de execução antes de virar o while
         time += 1
-
-
-
+    # Print do log do file system manager
+    print("Sistema de arquivos =>")
+    for i, log in enumerate(file_system_manager.log):
+        print(f"Operação {i} => " + log["status"] + "\n" + log["mensagem"] + "\n")
+    # Print do mapa de ocupação do disco
+    print("Mapa de ocupação do disco")
+    file_system_manager.print_map()
 
     #print(process_manager.process_left())
     #print(process_manager.real_time_queue[0].PID)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    print("ESTADO ATUAL DO DISCO")
-    print(file_system_manager.disc)
-    print("LOG DO FILESYSTEM")
-    for log in file_system_manager.log:
-        print(log)
 
 
 def printa_fila(fila: ProcessManager):
