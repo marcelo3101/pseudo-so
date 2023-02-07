@@ -1,5 +1,6 @@
 # administra as filas, escalona os process, cria processos, etc.
 from process import Process
+from resource_manager import ResourceManager
 from memory_manager import MemoryManager
 # IMPLEMENTAR FUNCIONALIDADE QUE VERIFICA SE PODE INERIR NOVO PROCESSO (NO MÁXIMO 100)
 # IMPLEMENTAR FUNCIONALIDADE QUE VERIFICA SE RECURSOS DE E/S DESEJADOS PELOS PROCESSOS ESTÃO DISPONÍVEIS (SE NÃO ESTIVEREM, ROTACIONA FILA)
@@ -16,6 +17,7 @@ class ProcessManager:
         self.third_queue = []
         self.in_cpu = None                      # Processo que está na CPU
         self.pid_tracker = 0                    # Variável usada para definir a pid
+        self.resource_manager = ResourceManager()
         #self.current_processes_priority = 0     # Prioridade do processo presente em CPU
 
     # Ordenar na global de acordo com o tempo de chegada e só depois adicionar nas filas de prioridade
@@ -44,7 +46,11 @@ class ProcessManager:
             # Como a lista está ordenada, ir até o primeiro processo com init_time > current_time
             if process.init_time > current_time:
                 break
-    
+        
+        # Remove processos que foram para suas listas de prioridade
+        for process in to_remove:
+            self.global_queue.remove(process)
+        
     # Checa se exite algum processo restante
     def process_left(self):
         if (len(self.global_queue) or
@@ -56,10 +62,18 @@ class ProcessManager:
 
     # Verifica se processo finalizou (retorna verdadeiro ou falso)
     def check_process_finish(self) -> None:
-        if(self.in_cpu.processing_time == self.in_cpu.time_executed):
-            return True
-        else:
-            return False
+        if self.in_cpu:
+            if(self.in_cpu.processing_time == self.in_cpu.time_executed):
+                # Libera dispositivos de E/S utilizados
+                self.resource_manager.free_resources(self.in_cpu)
+                print("Processo de PID " + str(self.in_cpu.PID) + " Está liberando os seguintes reursos:")
+                print(str(self.in_cpu.printer_code_req) + " impressoras")
+                print(str(self.in_cpu.scanner_req) + " scanners")
+                print(str(self.in_cpu.modem_req) + " modems")
+                print(str(self.in_cpu.disk_code) + " dispositivos SATA\n")
+                return True
+            else:
+                return False
 
     # Verifica se há um processo de maior prioridade para ser executado (retorna [(V ou F para existencia), (Qual a prioridade da nova fila (mais alta))])
     def check_higher_priority(self) -> None:
@@ -112,29 +126,62 @@ class ProcessManager:
     # Carrega processo a ser executado na cpu, e remove de sua fila. Também devolve processo que ocupa a cpu se ele não tiver sido finalizado
     def load_process(self, queue_priority) -> None:
         
-        # Se a CPU estiver vazia, carrega imediatamente
+        # Se a CPU estiver vazia, tenta carregar imediatamente
         if(self.in_cpu == None):
-            self.in_cpu = queue_priority[0]
-            queue_priority.pop(0)
-            return
+            # Aloca imediatamente se recursos necessáriios estiverem disponíveis
+            if self.resource_manager.allocate_resources(queue_priority[0]):
+                
+                print("Processo de PID " + str(queue_priority[0].PID) + " Está alocando os seguintes reursos:")
+                print(str(queue_priority[0].printer_code_req) + " impressoras")
+                print(str(queue_priority[0].scanner_req) + " scanners")
+                print(str(queue_priority[0].modem_req) + " modems")
+                print(str(queue_priority[0].disk_code) + " dispositivos SATA\n")
+                
+                self.in_cpu = queue_priority[0]
+                queue_priority.pop(0)
+                return
+            # Caso contrário, vai rotacionando a fila de prioridade até achar um processo que possa ser realizado
+            else:
+                for process in queue_priority:
+                    aux = process
+                    queue_priority.pop(0)
+                    queue_priority.append(aux)
+                    if self.resource_manager.allocate_resources(queue_priority[0]):
+                        
+                        print("Processo de PID " + str(queue_priority[0].PID) + " Está alocando os seguintes reursos:")
+                        print(str(queue_priority[0].printer_code_req) + " impressoras")
+                        print(str(queue_priority[0].scanner_req) + " scanners")
+                        print(str(queue_priority[0].modem_req) + " modems")
+                        print(str(queue_priority[0].disk_code) + " dispositivos SATA\n")
+                        
+                        self.in_cpu = queue_priority[0]
+                        queue_priority.pop(0)
+                        return
         
         finished = self.check_process_finish()
         
         # Devolve processo à fila caso não finalizado
-        if(not finished):
-            match self.in_cpu.priority:
-                case 0:
-                    return      # Se o processo não terminou e é prioridade 0, ele deve continuar na CPU
-                case 1:
-                    self.first_queue.append(self.in_cpu)
-                case 2:
-                    self.second_queue.append(self.in_cpu)
-                case 3:
-                    self.third_queue.append(self.in_cpu)
+        if self.in_cpu:
+            if(not finished):
+                match self.in_cpu.priority:
+                    case 0:
+                        return      # Se o processo não terminou e é prioridade 0, ele deve continuar na CPU
+                    case 1:
+                        self.first_queue.append(self.in_cpu)
+                    case 2:
+                        self.second_queue.append(self.in_cpu)
+                    case 3:
+                        self.third_queue.append(self.in_cpu)
         
         # Bota novo processo na cpu (se finalizou, descarta processo (funciona ate pra prioridade 0), se não, descarta também)
-        self.in_cpu = queue_priority[0]
-        queue_priority.pop(0)
+        
+        for process in queue_priority:
+            aux = process
+            queue_priority.pop(0)
+            queue_priority.append(aux)
+            if self.resource_manager.allocate_resources(queue_priority[0]):        
+                self.in_cpu = queue_priority[0]
+                queue_priority.pop(0)
 
     # Executa o processo selecionado para ser executado
     # Talvez a funcionalidade abaixo seja implementada na main, conferir com o grupo
@@ -142,12 +189,54 @@ class ProcessManager:
         #x = 1 # placeholder
 
     #Aplica aging nos processos para evitar starvation
-    def age_process(self, process: Process) -> None:
+    def age_process(self) -> None:
         # Só aplicará aging se o processo atualmente na cpu não é processo de tempo real
-        if(self.in_cpu.priority != 0):
-            # Função arbitrária usada para aumentar prioridade de processos e evitar starvation (sujeita a mudanças)
-            if((process.time_in_current_queue >= process.processing_time * 10) and (process.priority != 0)):
-                process.priority -= 1
+        if self.in_cpu:
+            if(self.in_cpu.priority != 0):
+
+                #if self.check_process_finish():
+                #    self.in_cpu = None
+
+                second_and_third_queues = self.second_queue
+                for i in self.third_queue:
+                    second_and_third_queues.append(i)
+
+                #print(len(self.second_queue))
+
+                # Somente realizará aging na segunda e terceira fila de prioridade
+                to_change = []  # processos que mudaremos de fila
+                for process in second_and_third_queues:
+
+                    process.time_in_current_queue += 1
+
+                    # Função arbitrária usada para aumentar prioridade de processos e evitar starvation (sujeita a mudanças)
+                    if((process.time_in_current_queue >= process.processing_time * 10) and (process.priority > 1)):
+
+                        # Reloca o processo para sua nova fila
+                        match process.priority:
+                            case 2:
+                                to_change.append([1,process])
+                                print("Vai mudar de prioridade 2 pra 1: " + str(process.PID))
+                                print("Process: " + str(process.PID) + " time in current queue: " + str(process.time_in_current_queue))
+                            
+                            case 3:
+                                to_change.append([2,process])
+                                print("Vai mudar de prioridade 3 pra 2: " + str(process.PID))
+
+                #print("Tam pra mudar: " + str(len(to_change)))
+                for process in to_change:
+                    match process[0]:
+                        case 1:
+                            self.first_queue.append(process[1])
+                            self.second_queue.remove(process[1])
+                            process[1].time_in_current_queue = 0
+                            process[1].priority -= 1
+                        case 2:
+                            self.second_queue.append(process[1])
+                            self.third_queue.remove(process[1])
+                            process[1].time_in_current_queue = 0
+                            process[1].priority -= 1
+
 
     # Função que garante rotação dos processos dentro das filas obedecendo o quantum
     def process_queue_rotation(self) -> None:
@@ -162,6 +251,7 @@ class ProcessManager:
                     self.load_process(self.real_time_queue)
             case 1:
                 if(len(self.first_queue) >= 1):
+                    print("Rotaciona para ver se tem algum processo que pode ocupar cpu na fila de prioridade atual (1)")
                     self.load_process(self.first_queue)
             case 2:
                 if(len(self.second_queue) >= 1):
@@ -177,6 +267,9 @@ class ProcessManager:
         #if (not self.in_cpu) and (not len(self.global_queue)):
         #    return
 
+        # Realiza processo de aging nas filas se processo na CPU não for de tempo real. Só envelhece processos de prioridade 2 e 3.
+        #self.age_process()
+
         # Aumenta tracker de tempo de execução do processo
         if self.in_cpu:
             self.in_cpu.time_executed += 1
@@ -185,7 +278,6 @@ class ProcessManager:
             if self.check_process_finish():
                 memory_manager.free(self.in_cpu)  # Libera espaço ocupado na memória
                 self.in_cpu = None
-
 
         # Se não há processo na CPU e há processo para ser escalonado, carrega o de maior prioridade.
         # Se não houver processo para ser escalonado, simplemente deixa passar
@@ -236,27 +328,27 @@ class ProcessManager:
         if tamanho_fila_atual >= 1:
             self.process_queue_rotation()   # rotaciona
             return
-        
-        else:
-            # verifica se o processo atual finalizou
-            if self.check_process_finish():                # se finalizou
-                check_low = self.check_lower_priority()
+        #    x = 1
 
-                if(check_low[0]):
-                    match check_low[1]:
-                        case 0:
-                            nova_fila_prioridade = self.real_time_queue
-                        case 1:
-                            nova_fila_prioridade = self.first_queue
-                        case 2:
-                            nova_fila_prioridade = self.second_queue
-                        case 3:
-                            nova_fila_prioridade = self.third_queue
+        # verifica se o processo atual finalizou
+        if self.check_process_finish():                # se finalizou
+            check_low = self.check_lower_priority()
 
-                    self.load_process(nova_fila_prioridade)    # Carrega nova fila de prioridade
-                    return
-            else:        # Se não finalizou
-                return   # Continua no processo atual
+            if(check_low[0]):
+                match check_low[1]:
+                    case 0:
+                        nova_fila_prioridade = self.real_time_queue
+                    case 1:
+                        nova_fila_prioridade = self.first_queue
+                    case 2:
+                        nova_fila_prioridade = self.second_queue
+                    case 3:
+                        nova_fila_prioridade = self.third_queue
+
+                self.load_process(nova_fila_prioridade)    # Carrega nova fila de prioridade
+                return
+        else:        # Se não finalizou
+            return   # Continua no processo atual
 
 
 
