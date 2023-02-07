@@ -29,6 +29,7 @@ class ProcessManager:
         
     # Verifica processos com init_time igual ao tempo atual e os adiciona na fila adequada
     def add_by_time(self, current_time, memory_manager: MemoryManager):
+        to_remove = []
         for process in self.global_queue:
             if process.init_time == current_time:
                 # Chama função do gerenciador de memória para alocar
@@ -42,7 +43,8 @@ class ProcessManager:
                             self.second_queue.append(process)
                         case 3:
                             self.third_queue.append(process)
-                    self.global_queue.remove(process)  # Remove processo da fila global
+                    # Adiciona para remover da fila global
+                    to_remove.append(process)
             # Como a lista está ordenada, ir até o primeiro processo com init_time > current_time
             if process.init_time > current_time:
                 break

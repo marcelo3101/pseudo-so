@@ -110,31 +110,10 @@ def main():
             print("Processing time:..................." + str(process_manager.in_cpu.processing_time) + "\n")
             file_system_manager.operate_process(process_manager.in_cpu)  # Realiza uma operação do processo
 
-        # Método que aloca dispositivos de E/S
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         # Aumenta tempo de execução antes de virar o while
         time += 1
+    
+    
     # Print do log do file system manager
     print("Sistema de arquivos =>")
     for i, log in enumerate(file_system_manager.log):
@@ -142,9 +121,6 @@ def main():
     # Print do mapa de ocupação do disco
     print("Mapa de ocupação do disco")
     file_system_manager.print_map()
-
-    #print(process_manager.process_left())
-    #print(process_manager.real_time_queue[0].PID)
 
 
 def printa_fila(fila: ProcessManager):
