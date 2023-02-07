@@ -86,24 +86,50 @@ def main():
     # Sort na global queue pelo init_time dos processos
     process_manager.global_queue = sorted(process_manager.global_queue, key=lambda x: x.init_time)
     time = 0  # Marca o tempo atual
+
+    for i in process_manager.global_queue:
+        print("Init time do processo " + str(i.PID) + ": " + str(i.init_time))
+
+
     while(process_manager.process_left() or process_manager.in_cpu):
+        
         
         # Adiciona novos processos que chegaram no tempo atual a suas determinadas filas
         process_manager.add_by_time(time)
 
-        print("Time = " + str(time) + "\n")
+        print("Time = " + str(time))
 
         # Método que faz escalonamento de processos
         process_manager.process_preemption(time)
-
-
-
+        process_manager.age_process()
 
         if process_manager.in_cpu:
             print("PID do processo atual:............." + str(process_manager.in_cpu.PID))
             print("Prioridade do processo atual:......" + str(process_manager.in_cpu.priority))
             print("Executed time in CPU:.............." + str(process_manager.in_cpu.time_executed + 1))
             print("Processing time:..................." + str(process_manager.in_cpu.processing_time) + "\n")
+
+        # Método que aloca dispositivos de E/S
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         # Aumenta tempo de execução antes de virar o while
