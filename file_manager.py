@@ -20,6 +20,22 @@ class FileManager:
             for i in range(file_info["memory_blocks"]):
                 self.disc[file_info["first_block"] + i] = 1
     
+    def print_map(self):
+        """
+            Printa o mapa de ocupação do disco.
+            A string que representa o disco começa | | | |...| |
+            então podemos mapear o índice do bloco ocupado para o índice da string usando a fórmula
+            2 * (n + 1) - 1, onde n é o bloco ocupado começando em 0
+        """
+        disc_map = "| " * self.blocks_quantity
+        disc_map += "|"
+        for file in self.files.keys():
+            file_obj = self.files[file]
+            block_index = file_obj["first_block"]
+            for i in range(file_obj["memory_blocks"]):
+                disc_map = disc_map[:2*(block_index + 1) - 1] + file + disc_map[2*(block_index + 1):]
+                block_index += 1
+        print(disc_map)
     
     def create_file(self, name, size, creator):
         offset = None
@@ -70,7 +86,7 @@ class FileManager:
                 "mensagem": f"O processo {str(process.PID)} nao pode deletar o arquivo {filename}, pois ele não existe"
             })
             return
-        file= self.files[filename]  # Pega as informações do arquivo
+        file = self.files[filename]  # Pega as informações do arquivo
         if process.priority != 0 and file["process_id"] != process.PID:
             self.log.append({
                 "status": "Falha",
@@ -84,6 +100,8 @@ class FileManager:
                 "status": "Sucesso",
                 "mensagem": f"O processo {str(process.PID)} deletou o arquivo {filename}"
             })
+            # Remove do dicionário
+            self.files.pop(filename)
         
 
     def operate_process(self, process: Process):
