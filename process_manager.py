@@ -144,21 +144,26 @@ class ProcessManager:
                 return
             # Caso contrário, vai rotacionando a fila de prioridade até achar um processo que possa ser realizado
             else:
-                for process in queue_priority:
-                    aux = process
+                if queue_priority[0].priority == 0:
+                    print("Removendo o processo de prioridade 0 e PID: " + str(queue_priority[0].PID) + "da fila de execução")
                     queue_priority.pop(0)
-                    queue_priority.append(aux)
-                    if self.resource_manager.allocate_resources(queue_priority[0]):
-                        
-                        print("Processo de PID " + str(queue_priority[0].PID) + " Está alocando os seguintes reursos:")
-                        print(str(queue_priority[0].printer_code_req) + " impressoras")
-                        print(str(queue_priority[0].scanner_req) + " scanners")
-                        print(str(queue_priority[0].modem_req) + " modems")
-                        print(str(queue_priority[0].disk_code) + " dispositivos SATA\n")
-                        
-                        self.in_cpu = queue_priority[0]
+                
+                else:
+                    for process in queue_priority:
+                        aux = process
                         queue_priority.pop(0)
-                        return
+                        queue_priority.append(aux)
+                        if self.resource_manager.allocate_resources(queue_priority[0]):
+                            
+                            print("Processo de PID " + str(queue_priority[0].PID) + " Está alocando os seguintes reursos:")
+                            print(str(queue_priority[0].printer_code_req) + " impressoras")
+                            print(str(queue_priority[0].scanner_req) + " scanners")
+                            print(str(queue_priority[0].modem_req) + " modems")
+                            print(str(queue_priority[0].disk_code) + " dispositivos SATA\n")
+                            
+                            self.in_cpu = queue_priority[0]
+                            queue_priority.pop(0)
+                            return
         
         finished = self.check_process_finish()
         
@@ -184,11 +189,6 @@ class ProcessManager:
             if self.resource_manager.allocate_resources(queue_priority[0]):        
                 self.in_cpu = queue_priority[0]
                 queue_priority.pop(0)
-
-    # Executa o processo selecionado para ser executado
-    # Talvez a funcionalidade abaixo seja implementada na main, conferir com o grupo
-    #def execute_process(self) -> None:
-        #x = 1 # placeholder
 
     #Aplica aging nos processos para evitar starvation
     def age_process(self) -> None:
@@ -264,13 +264,6 @@ class ProcessManager:
 
     # Função que executa preempção de acordo com o estado atual dos processos
     def process_preemption(self, memory_manager: MemoryManager) -> None:
-        
-        # Se não há processo na cpu e não há processo para ser escalonado, simplesmente retorna
-        #if (not self.in_cpu) and (not len(self.global_queue)):
-        #    return
-
-        # Realiza processo de aging nas filas se processo na CPU não for de tempo real. Só envelhece processos de prioridade 2 e 3.
-        #self.age_process()
 
         # Aumenta tracker de tempo de execução do processo
         if self.in_cpu:
@@ -330,7 +323,6 @@ class ProcessManager:
         if tamanho_fila_atual >= 1:
             self.process_queue_rotation()   # rotaciona
             return
-        #    x = 1
 
         # verifica se o processo atual finalizou
         if self.check_process_finish():                # se finalizou

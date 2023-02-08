@@ -33,7 +33,8 @@ class ResourceManager:
         # Primeiramente verifica se o processo é de tempo real (impossibilita de alocar recursos)
         if process.priority == 0:
             if process.scanner_req or process.printer_code_req or process.modem_req or process.disk_code:
-                print("ERRO: O processo de PID " + str(process.PID) + " (de tempo real) tentou alocar recursos\n" )
+                print("ERRO: O processo de PID " + str(process.PID) + " (de tempo real) tentou alocar recursos" )
+                
                 return False
 
         self.lock.acquire()     # Entra na região crítica
