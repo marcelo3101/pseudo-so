@@ -75,11 +75,13 @@ class ResourceManager:
                 if self.SATA_users[i] == process.PID:
                     self.SATA_users[i] = -1
         
-        print("Processo de PID " + str(process.PID) + " Está liberando os seguintes reursos:")
-        print(str(process.printer_code_req) + " impressoras")
-        print(str(process.scanner_req) + " scanners")
-        print(str(process.modem_req) + " modems")
-        print(str(process.disk_code) + " dispositivos SATA\n")
+        # Notifica liberação de recursos caso o processo estivesse utilizando
+        if process.scanner_req or process.modem_req or process.printer_code_req or process.disk_code:
+            print("Processo de PID " + str(process.PID) + " Está liberando os seguintes reursos:")
+            print(str(process.printer_code_req) + " impressoras")
+            print(str(process.scanner_req) + " scanners")
+            print(str(process.modem_req) + " modems")
+            print(str(process.disk_code) + " dispositivos SATA\n")
 
         self.lock.release()     # Sai da região crítica
 
@@ -162,6 +164,7 @@ class ResourceManager:
 
         # Primeiro checa se processo precisa de QUALQUER recurso
         if process.scanner_req == 0 and process.printer_code_req == 0 and process.modem_req == 0 and process.disk_code == 0:            
+            print("O processo de PID: " +str(process.PID) + " não precisa de nenhum dispositivo de E/S")
             return True
         # Se precisar de algum recurso, verifica se já os possui
         else:
