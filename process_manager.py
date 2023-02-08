@@ -2,7 +2,7 @@
 from process import Process
 from resource_manager import ResourceManager
 from memory_manager import MemoryManager
-# IMPLEMENTAR FUNCIONALIDADE QUE VERIFICA SE PODE INERIR NOVO PROCESSO (NO MÁXIMO 100)
+# IMPLEMENTAR FUNCIONALIDADE QUE VERIFICA SE PODE INSERIR NOVO PROCESSO (NO MÁXIMO 100)
 # IMPLEMENTAR FUNCIONALIDADE QUE VERIFICA SE RECURSOS DE E/S DESEJADOS PELOS PROCESSOS ESTÃO DISPONÍVEIS (SE NÃO ESTIVEREM, ROTACIONA FILA)
 
 class ProcessManager:
@@ -11,7 +11,6 @@ class ProcessManager:
     def __init__(self) -> None:
         self.global_queue = []
         self.real_time_queue = []
-        # self.user_queue = []
         self.first_queue = []
         self.second_queue = []
         self.third_queue = []
@@ -28,7 +27,14 @@ class ProcessManager:
         self.global_queue.append(process)  # Adiciona o processo a fila global
         
     # Verifica processos com init_time igual ao tempo atual e os adiciona na fila adequada
+    # Se já houverem 100 processos na fila global, não adiciona no momento
     def add_by_time(self, current_time, memory_manager: MemoryManager):
+        
+        # Verifica se há mais de 100 processos nas filas no momento atual, se sim, continua execução
+        if 100 == len(self.real_time_queue) + len(self.first_queue) + len(self.second_queue) + len(self.third_queue):
+            print("Impossível adicionar novos processos no momento. Já há 100 processos carregados nas filas.")
+            return
+        
         to_remove = []
         for process in self.global_queue:
             if process.init_time <= current_time:
@@ -145,7 +151,7 @@ class ProcessManager:
             # Caso contrário, vai rotacionando a fila de prioridade até achar um processo que possa ser realizado
             else:
                 if queue_priority[0].priority == 0:
-                    print("Removendo o processo de prioridade 0 e PID: " + str(queue_priority[0].PID) + "da fila de execução")
+                    print("Removendo o processo de prioridade 0 e PID: " + str(queue_priority[0].PID) + " da fila de execução")
                 
                 for process in queue_priority:
                     aux = process
@@ -165,28 +171,55 @@ class ProcessManager:
         
         finished = self.check_process_finish()
         
+        # Se tiver finalizado, percorre fila de prioridade atual até achar alguém que consegue executar
+        # Se não tiver ningém na fila atual, vai pras de prioridade menor
+
+        if finished:
+            for i in range(len(queue_priority)):
+                aux = queue_priority[i]
+                if self.resource_manager.allocate_resources(aux):
+                    self.in_cpu = aux
+                    queue_priority.remove(aux)
+
+        # Se não finalizou, verifica se há algum outro em sua fila que pode ser executado
+        # Se não houver mais ninguém que pode ser executado, mantém o processo atual na CPU
+
+        else:
+            for i in range(len(queue_priority)):
+                aux = queue_priority[i]
+                if self.resource_manager.allocate_resources(aux):
+                    queue_priority.append(self.in_cpu)
+                    self.in_cpu = aux
+                    queue_priority.remove(aux)
+
+
+
+
+
         # Devolve processo à fila caso não finalizado
-        if self.in_cpu:
-            if(not finished):
-                match self.in_cpu.priority:
-                    case 0:
-                        return      # Se o processo não terminou e é prioridade 0, ele deve continuar na CPU
-                    case 1:
-                        self.first_queue.append(self.in_cpu)
-                    case 2:
-                        self.second_queue.append(self.in_cpu)
-                    case 3:
-                        self.third_queue.append(self.in_cpu)
+        #if self.in_cpu:
+        #    if(not finished):
+        #        match self.in_cpu.priority:
+        #            case 0:
+        #                return      # Se o processo não terminou e é prioridade 0, ele deve continuar na CPU
+        #            case 1:
+        #                self.first_queue.append(self.in_cpu)
+        #                #print(self.in_cpu)
+        #                #print(self.first_queue)
+        #            case 2:
+        #                self.second_queue.append(self.in_cpu)
+        #            case 3:
+        #                self.third_queue.append(self.in_cpu)
         
         # Bota novo processo na cpu (se finalizou, descarta processo (funciona ate pra prioridade 0), se não, descarta também)
         
-        for process in queue_priority:
-            aux = process
-            queue_priority.pop(0)
-            queue_priority.append(aux)
-            if self.resource_manager.allocate_resources(queue_priority[0]):        
-                self.in_cpu = queue_priority[0]
-                queue_priority.pop(0)
+        #for process in queue_priority:
+        #    aux = process
+        #    queue_priority.pop(0)
+        #    queue_priority.append(aux)
+        #    if self.resource_manager.allocate_resources(queue_priority[0]):        
+        #        self.in_cpu = queue_priority[0]
+        #        queue_priority.pop(0)
 
     # Executa o processo selecionado para ser executado
     # Talvez a funcionalidade abaixo seja implementada na main, conferir com o grupo
@@ -246,7 +279,6 @@ class ProcessManager:
     # Função que garante rotação dos processos dentro das filas obedecendo o quantum
     def process_queue_rotation(self) -> None:
         # Realimenta CPU com processo da mesma fila do processo que está nela
-        # self.load_process(self.in_cpu.priority)
        
        # Rotaciona fila somente se elas possuirem pelo menos um processo
         match self.in_cpu.priority:
@@ -256,7 +288,7 @@ class ProcessManager:
                     self.load_process(self.real_time_queue)
             case 1:
                 if(len(self.first_queue) >= 1):
-                    print("Rotaciona para ver se tem algum processo que pode ocupar cpu na fila de prioridade atual (1)")
+                    #print("Rotaciona para ver se tem algum processo que pode ocupar cpu na fila de prioridade atual (1)")
                     self.load_process(self.first_queue)
             case 2:
                 if(len(self.second_queue) >= 1):
@@ -268,13 +300,6 @@ class ProcessManager:
     # Função que executa preempção de acordo com o estado atual dos processos
     def process_preemption(self, memory_manager: MemoryManager) -> None:
         
-        # Se não há processo na cpu e não há processo para ser escalonado, simplesmente retorna
-        #if (not self.in_cpu) and (not len(self.global_queue)):
-        #    return
-
-        # Realiza processo de aging nas filas se processo na CPU não for de tempo real. Só envelhece processos de prioridade 2 e 3.
-        #self.age_process()
-
         # Aumenta tracker de tempo de execução do processo
         if self.in_cpu:
             self.in_cpu.time_executed += 1

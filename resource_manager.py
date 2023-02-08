@@ -18,10 +18,10 @@ class ResourceManager:
     def __init__(self) -> None:
         
         # EDs que identificam quais processos estão na posse de quais recursos
-        self.scanner_user =   Value('i', -1)
-        self.printer_users = Array('i', [-1,-1])
-        self.modem_user =    Value('i', -1)
-        self.SATA_users =    Array('i', [-1,-1])
+        self.scanner_user =   -1
+        self.printer_users = [-1,-1]
+        self.modem_user =    -1
+        self.SATA_users =    [-1,-1]
         
         # Único lock usado na alocação/liberação de dispositivos de E/S
         self.lock = Lock()
@@ -41,10 +41,12 @@ class ResourceManager:
         
         return_value = False
         
-        if self.verify_allocated_resources:
+        if self.verify_allocated_resources(process):
             return_value = True
         elif self.try_get_resource(process):
             return_value = True        
+        
+        #print("CHEGA AQUI")
         
         self.lock.release()     # Sai da região crítica
 
@@ -79,6 +81,8 @@ class ResourceManager:
         
         # Verifica se os recursos que o processo precisa estão disponíveis
         if process.scanner_req and (self.scanner_user != -1):
+            print("BABY BABY BABY")
+            print(self.scanner_user)
             return False
         
         if process.modem_req and (self.modem_user != -1):
@@ -117,36 +121,40 @@ class ResourceManager:
                 if i == -1:
                     i = process.PID
                     break
-
+    
         return True
 
     # Retorna True caso tenha tudo que precisa, e False se não.
     def verify_allocated_resources(self, process: Process):
 
         # Primeiro checa se processo precisa de QUALQUER recurso
-        if not(process.scanner_req and process.printer_code_req and process.modem_req and process.disk_code):            
+        if process.scanner_req == 0 and process.printer_code_req == 0 and process.modem_req == 0 and process.disk_code == 0:            
             return True
-        # Se precisar de algum recurso, verifica já os possui
+        # Se precisar de algum recurso, verifica se já os possui
         else:
-            if self.scanner_user != process.PID:
-                return False
+            if process.scanner_req == 1:
+                if self.scanner_user != process.PID:
+                    return False
             
-            if self.modem_user != process.PID:
-                return False
+            if process.modem_req == 1:
+                if self.modem_user != process.PID:
+                    return False
             
-            count = 0
-            for i in self.printer_users:
-                if i == process.PID:
-                    count = 1
-            if count == 0:
-                return False
+            if process.printer_code_req > 0:
+                count = 0
+                for i in self.printer_users:
+                    if i == process.PID:
+                        count = 1
+                if count == 0:
+                    return False
             
-            count = 0
-            for i in self.SATA_users:
-                if i == process.PID:
-                    count = 1
-            if count == 0:
-                return False
+            if process.disk_code > 0:
+                count = 0
+                for i in self.SATA_users:
+                    if i == process.PID:
+                        count = 1
+                if count == 0:
+                    return False
 
             return True
 
