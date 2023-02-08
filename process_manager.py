@@ -74,11 +74,6 @@ class ProcessManager:
             if(self.in_cpu.processing_time == self.in_cpu.time_executed):
                 # Libera dispositivos de E/S utilizados
                 self.resource_manager.free_resources(self.in_cpu)
-                print("Processo de PID " + str(self.in_cpu.PID) + " Está liberando os seguintes reursos:")
-                print(str(self.in_cpu.printer_code_req) + " impressoras")
-                print(str(self.in_cpu.scanner_req) + " scanners")
-                print(str(self.in_cpu.modem_req) + " modems")
-                print(str(self.in_cpu.disk_code) + " dispositivos SATA\n")
                 return True
             else:
                 return False
@@ -139,12 +134,6 @@ class ProcessManager:
             # Aloca imediatamente se recursos necessáriios estiverem disponíveis
             if self.resource_manager.allocate_resources(queue_priority[0]):
                 
-                print("Processo de PID " + str(queue_priority[0].PID) + " Está alocando os seguintes reursos:")
-                print(str(queue_priority[0].printer_code_req) + " impressoras")
-                print(str(queue_priority[0].scanner_req) + " scanners")
-                print(str(queue_priority[0].modem_req) + " modems")
-                print(str(queue_priority[0].disk_code) + " dispositivos SATA\n")
-                
                 self.in_cpu = queue_priority[0]
                 queue_priority.pop(0)
                 return
@@ -158,12 +147,6 @@ class ProcessManager:
                     queue_priority.pop(0)
                     queue_priority.append(aux)
                     if self.resource_manager.allocate_resources(queue_priority[0]):
-                        
-                        print("Processo de PID " + str(queue_priority[0].PID) + " Está alocando os seguintes reursos:")
-                        print(str(queue_priority[0].printer_code_req) + " impressoras")
-                        print(str(queue_priority[0].scanner_req) + " scanners")
-                        print(str(queue_priority[0].modem_req) + " modems")
-                        print(str(queue_priority[0].disk_code) + " dispositivos SATA\n")
                         
                         self.in_cpu = queue_priority[0]
                         queue_priority.pop(0)
