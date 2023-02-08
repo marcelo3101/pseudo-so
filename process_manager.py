@@ -183,54 +183,15 @@ class ProcessManager:
                     self.in_cpu = aux
                     queue_priority.remove(aux)
 
-
-
-
-
-        # Devolve processo à fila caso não finalizado
-        #if self.in_cpu:
-        #    if(not finished):
-        #        match self.in_cpu.priority:
-        #            case 0:
-        #                return      # Se o processo não terminou e é prioridade 0, ele deve continuar na CPU
-        #            case 1:
-        #                self.first_queue.append(self.in_cpu)
-        #                #print(self.in_cpu)
-        #                #print(self.first_queue)
-        #            case 2:
-        #                self.second_queue.append(self.in_cpu)
-        #            case 3:
-        #                self.third_queue.append(self.in_cpu)
-        
-        # Bota novo processo na cpu (se finalizou, descarta processo (funciona ate pra prioridade 0), se não, descarta também)
-        
-        #for process in queue_priority:
-        #    aux = process
-        #    queue_priority.pop(0)
-        #    queue_priority.append(aux)
-        #    if self.resource_manager.allocate_resources(queue_priority[0]):        
-        #        self.in_cpu = queue_priority[0]
-        #        queue_priority.pop(0)
-
-    # Executa o processo selecionado para ser executado
-    # Talvez a funcionalidade abaixo seja implementada na main, conferir com o grupo
-    #def execute_process(self) -> None:
-        #x = 1 # placeholder
-
     #Aplica aging nos processos para evitar starvation
     def age_process(self) -> None:
         # Só aplicará aging se o processo atualmente na cpu não é processo de tempo real
         if self.in_cpu:
             if(self.in_cpu.priority != 0):
 
-                #if self.check_process_finish():
-                #    self.in_cpu = None
-
                 second_and_third_queues = self.second_queue
                 for i in self.third_queue:
                     second_and_third_queues.append(i)
-
-                #print(len(self.second_queue))
 
                 # Somente realizará aging na segunda e terceira fila de prioridade
                 to_change = []  # processos que mudaremos de fila

@@ -42,13 +42,9 @@ class ResourceManager:
         return_value = False
         
         if self.verify_allocated_resources(process):
-            #print("JÁ TEM")
             return_value = True
         elif self.try_get_resource(process):
-            #print("NÃO TEM")
             return_value = True        
-        
-        #print("CHEGA AQUI")
         
         self.lock.release()     # Sai da região crítica
 
@@ -112,7 +108,6 @@ class ResourceManager:
             return False
 
         # Aloca recursos para o processo
-
         if process.scanner_req:
             self.scanner_user = process.PID
 
@@ -134,9 +129,6 @@ class ResourceManager:
                 if self.printer_users[i] == -1 and spaces_required:
                     self.printer_users[i] = process.PID
                     spaces_required -= 1
-
-            #print("Estado atual da lista de utilizadoes das impressoras: " + str(self.printer_users))
-            #print(self.printer_users)
 
         count = 0
         if process.disk_code:

@@ -113,9 +113,6 @@ def main():
         # Aumenta tempo de execução antes de virar o while
         time += 1
     
-        #if time == 30:
-        #    break
-    
     # Print do log do file system manager
     print("Sistema de arquivos =>")
     for i, log in enumerate(file_system_manager.log):
