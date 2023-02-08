@@ -91,6 +91,7 @@ def main():
         print("Init time do processo " + str(i.PID) + ": " + str(i.init_time))
 
 
+
     while(process_manager.process_left() or process_manager.in_cpu):
         
         
@@ -113,6 +114,7 @@ def main():
         # Aumenta tempo de execução antes de virar o while
         time += 1
     
+
     
     # Print do log do file system manager
     print("Sistema de arquivos =>")

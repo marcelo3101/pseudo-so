@@ -15,7 +15,7 @@ Implementação de um pseudo-SO multiprogramado, composto por um Gerenciador de 
 
 ## Instalação
 
-Para executar o **pseudo-so** é preciso instalar o Python 3.10, para isso, basta seguir o tutorial abaixo:
+Para executar o **pseudo-so** é preciso instalar o **Python 3.10**, para isso, basta seguir o tutorial abaixo:
 
 ### Windows:
 
