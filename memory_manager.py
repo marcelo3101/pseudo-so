@@ -31,8 +31,6 @@ class MemoryManager:
         first_free = -1  # Utilizado para salvar o índice do primeiro bloco livre encontrado
         current = start  # Utilizado para manter o acompanhamento de qual índice estamos
         available_blocks = 0  # Saber quantos blocos contíguos estão livres
-        print("START: " + str(start))
-        print("END: " + str(end))
         while current <= end:
             if self.memory[current] == 0:  # Achou um bloco livre
                 available_blocks += 1  # Incrementa contador de blocos livres 

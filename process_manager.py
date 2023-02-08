@@ -51,6 +51,14 @@ class ProcessManager:
                             self.third_queue.append(process)
                     # Adiciona para remover da fila global
                     to_remove.append(process)
+                # Trata o caso de alocações que superam o tamanho da memória
+                if(process.priority == 0 and process.memory_blocks > 64):
+                    print(f"Processo de tempo real {process.PID} não será alocado pois ultrapassa o limite de memória")
+                    to_remove.append(process)
+                elif(process.priority == 1 and process.memory_blocks > 960):
+                    print(f"Processo de usuário {process.PID} não será alocado pois ultrapassa o limite de memória")
+                    to_remove.append(process)
+
             # Como a lista está ordenada, ir até o primeiro processo com init_time > current_time
             if process.init_time > current_time:
                 break
