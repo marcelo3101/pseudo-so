@@ -53,4 +53,4 @@ Para executar o **pseudo-so** é preciso instalar o Python 3.10, para isso, bast
 
 2. Agora, para executar o arquivo *main.py*, digite o seguinte comando: "python3 main.py" **(sem as aspas)**.
 
-3. Se o arquivo *main.py* estiver escrito corretamente, o prompt de comando exibirá o resultado da execução. Se houver algum erro, ele será exibido também.
+3. Se o arquivo *main.py* estiver escrito corretamente, o prompt de comando exibirá o resultado da execução.
