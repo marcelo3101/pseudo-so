@@ -94,9 +94,10 @@ def main():
 
     while(process_manager.process_left() or process_manager.in_cpu):
         
-        
         # Adiciona novos processos que chegaram no tempo atual a suas determinadas filas
         process_manager.add_by_time(time, memory_manager)
+        
+        print("Time: " + str(time))
 
         # Método que faz escalonamento de processos
         process_manager.process_preemption(memory_manager)
