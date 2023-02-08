@@ -81,8 +81,8 @@ class ResourceManager:
         
         # Verifica se os recursos que o processo precisa estão disponíveis
         if process.scanner_req and (self.scanner_user != -1):
-            print("BABY BABY BABY")
-            print(self.scanner_user)
+            #print("BABY BABY BABY")
+            #print(self.scanner_user)
             return False
         
         if process.modem_req and (self.modem_user != -1):
